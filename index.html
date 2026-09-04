@@ -1,0 +1,309 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=375, initial-scale=1.0, user-scalable=no">
+    <title>勋章查看</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            min-height: 100vh;
+            background: #888;
+            -webkit-font-smoothing: antialiased;
+        }
+
+        .phone-frame {
+            position: relative;
+            width: 375px;
+            height: 812px;
+            overflow: hidden;
+            user-select: none;
+            -webkit-user-select: none;
+        }
+
+        .bg {
+            position: absolute;
+            top: 0;
+            left: 0;
+            width: 375px;
+            height: 812px;
+        }
+
+        .bg img {
+            width: 100%;
+            height: 100%;
+            display: block;
+        }
+
+        /* Large medal carousel area */
+        .medal-area-large {
+            position: absolute;
+            left: 20px;
+            top: 267px;
+            width: 335px;
+            height: 180px;
+            overflow: hidden;
+        }
+
+        .medal-large {
+            position: absolute;
+            border-radius: 50%;
+            overflow: hidden;
+            transition: left 0.4s cubic-bezier(0.25, 0.1, 0.25, 1),
+                        top 0.4s cubic-bezier(0.25, 0.1, 0.25, 1),
+                        width 0.4s cubic-bezier(0.25, 0.1, 0.25, 1),
+                        height 0.4s cubic-bezier(0.25, 0.1, 0.25, 1);
+            will-change: left, top, width, height;
+        }
+
+        .medal-large img {
+            width: 100%;
+            height: 100%;
+            object-fit: cover;
+            display: block;
+            pointer-events: none;
+        }
+
+        .medal-row-small {
+            position: absolute;
+            left: 93.5px;
+            top: 552px;
+            width: 188px;
+            height: 36px;
+            z-index: 3;
+            overflow: hidden;
+        }
+
+        .small-medals-track {
+            position: relative;
+            height: 36px;
+            transition: transform 0.4s cubic-bezier(0.25, 0.1, 0.25, 1);
+            will-change: transform;
+        }
+
+        .medal-small {
+            position: absolute;
+            top: 0;
+            width: 36px;
+            height: 36px;
+            background: transparent;
+            transition: opacity 0.4s cubic-bezier(0.25, 0.1, 0.25, 1);
+            will-change: opacity;
+        }
+
+        .medal-small img {
+            width: 100%;
+            height: 100%;
+            object-fit: contain;
+            display: block;
+            pointer-events: none;
+        }
+
+    </style>
+</head>
+<body>
+    <div class="phone-frame" id="medalViewer">
+        <div class="bg">
+            <img src="assets/bg.png" alt="background">
+        </div>
+
+        <div class="medal-area-large" id="medalAreaLarge"></div>
+
+        <div class="medal-row-small" id="medalRowSmall">
+            <div class="small-medals-track" id="smallMedalsTrack"></div>
+        </div>
+
+    </div>
+
+    <script>
+        const MEDALS = [
+            'assets/medal_1.png',
+            'assets/medal_2.png',
+            'assets/medal_3.png',
+            'assets/medal_4.png',
+            'assets/medal_5.png'
+        ];
+
+        const TOTAL = MEDALS.length;
+        let currentIndex = 2; // medal_3 is initially centered (index 2)
+        let animating = false;
+
+        // Large medal positions — center is big, sides are small, smooth transition
+        const POS = {
+            farLeft:  { left: -200, top: 30, size: 120 },
+            left:     { left: -60,  top: 30, size: 120 },
+            center:   { left: 78,   top: 0,  size: 180 },
+            right:    { left: 275,  top: 30, size: 120 },
+            farRight: { left: 415,  top: 30, size: 120 }
+        };
+
+        const posKeys = ['farLeft', 'left', 'center', 'right', 'farRight'];
+
+        // Build large medal elements
+        const largeArea = document.getElementById('medalAreaLarge');
+        const largeMedals = [];
+        for (let i = 0; i < TOTAL; i++) {
+            const div = document.createElement('div');
+            div.className = 'medal-large';
+            div.innerHTML = `<img src="${MEDALS[i]}" alt="Medal ${i + 1}">`;
+            largeArea.appendChild(div);
+            largeMedals.push(div);
+        }
+
+        // Build small medal elements
+        const smallTrack = document.getElementById('smallMedalsTrack');
+        const smallMedals = [];
+        const SMALL_GAP = 76; // spacing between small medals (center to center)
+        for (let i = 0; i < TOTAL; i++) {
+            const div = document.createElement('div');
+            div.className = 'medal-small';
+            div.style.left = (i * SMALL_GAP) + 'px';
+            div.innerHTML = `<img src="${MEDALS[i]}" alt="Medal ${i + 1}">`;
+            smallTrack.appendChild(div);
+            smallMedals.push(div);
+        }
+
+        function updatePositions(animate) {
+            if (!animate) {
+                largeMedals.forEach(m => m.style.transition = 'none');
+                smallTrack.style.transition = 'none';
+                smallMedals.forEach(m => m.style.transition = 'none');
+            }
+
+            // Update large medals
+            for (let i = 0; i < TOTAL; i++) {
+                const offset = i - currentIndex;
+                let posKey;
+
+                if (offset <= -2) posKey = 'farLeft';
+                else if (offset === -1) posKey = 'left';
+                else if (offset === 0) posKey = 'center';
+                else if (offset === 1) posKey = 'right';
+                else posKey = 'farRight';
+
+                const m = largeMedals[i];
+                const p = POS[posKey];
+                m.style.left = p.left + 'px';
+                m.style.top = p.top + 'px';
+                m.style.width = p.size + 'px';
+                m.style.height = p.size + 'px';
+                m.style.opacity = '1';
+                m.style.zIndex = (posKey === 'center') ? 10 : 1;
+            }
+
+            // Update small medals track position
+            const trackOffset = -(currentIndex * SMALL_GAP) + 76;
+            smallTrack.style.transform = `translateX(${trackOffset}px)`;
+
+            // Small medal opacity
+            for (let i = 0; i < TOTAL; i++) {
+                smallMedals[i].style.opacity = (i === currentIndex) ? '1' : '0.4';
+                if (i === currentIndex) {
+                    smallMedals[i].classList.add('active');
+                } else {
+                    smallMedals[i].classList.remove('active');
+                }
+            }
+
+            if (!animate) {
+                // Force reflow then re-enable transitions
+                void largeArea.offsetHeight;
+                requestAnimationFrame(() => {
+                    largeMedals.forEach(m => m.style.transition = '');
+                    smallTrack.style.transition = '';
+                    smallMedals.forEach(m => m.style.transition = '');
+                });
+            }
+        }
+
+        function goTo(index) {
+            if (animating) return;
+            if (index < 0 || index >= TOTAL) return;
+            if (index === currentIndex) return;
+
+            animating = true;
+            currentIndex = index;
+            updatePositions(true);
+
+            setTimeout(() => {
+                animating = false;
+            }, 420);
+        }
+
+        function goLeft() {
+            goTo(currentIndex - 1);
+        }
+
+        function goRight() {
+            goTo(currentIndex + 1);
+        }
+
+        // Initialize
+        updatePositions(false);
+
+        // Touch / mouse swipe handling
+        let startX = 0;
+        let startY = 0;
+        let isDragging = false;
+
+        const viewer = document.getElementById('medalViewer');
+
+        viewer.addEventListener('touchstart', (e) => {
+            if (animating) return;
+            startX = e.touches[0].clientX;
+            startY = e.touches[0].clientY;
+            isDragging = true;
+        }, { passive: true });
+
+        viewer.addEventListener('touchend', (e) => {
+            if (!isDragging) return;
+            isDragging = false;
+            const dx = e.changedTouches[0].clientX - startX;
+            const dy = e.changedTouches[0].clientY - startY;
+            if (Math.abs(dx) > 30 && Math.abs(dx) > Math.abs(dy)) {
+                if (dx < 0) goRight();
+                else goLeft();
+            }
+        }, { passive: true });
+
+        viewer.addEventListener('mousedown', (e) => {
+            if (animating) return;
+            startX = e.clientX;
+            startY = e.clientY;
+            isDragging = true;
+            e.preventDefault();
+        });
+
+        document.addEventListener('mouseup', (e) => {
+            if (!isDragging) return;
+            isDragging = false;
+            const dx = e.clientX - startX;
+            const dy = e.clientY - startY;
+            if (Math.abs(dx) > 30 && Math.abs(dx) > Math.abs(dy)) {
+                if (dx < 0) goRight();
+                else goLeft();
+            }
+        });
+
+        // Keyboard support
+        document.addEventListener('keydown', (e) => {
+            if (e.key === 'ArrowLeft') goLeft();
+            else if (e.key === 'ArrowRight') goRight();
+        });
+
+        // Click small medals to jump
+        smallMedals.forEach((m, i) => {
+            m.style.cursor = 'pointer';
+            m.addEventListener('click', () => goTo(i));
+        });
+    </script>
+</body>
+</html>
