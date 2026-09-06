@@ -73,38 +73,6 @@
             pointer-events: none;
         }
 
-        /* Medal text area */
-        .medal-text {
-            position: absolute;
-            left: 0;
-            top: 460px;
-            width: 375px;
-            text-align: center;
-            z-index: 5;
-        }
-
-        .medal-title {
-            font-family: 'Roboto', 'PingFang SC', sans-serif;
-            font-size: 18px;
-            font-weight: 600;
-            color: #FFFFFF;
-            line-height: 24px;
-            margin-bottom: 8px;
-            opacity: 1;
-            transition: opacity 0.3s ease;
-        }
-
-        .medal-desc {
-            font-family: 'Roboto', 'PingFang SC', sans-serif;
-            font-size: 13px;
-            font-weight: 400;
-            color: rgba(255, 255, 255, 0.55);
-            line-height: 18px;
-            padding: 0 40px;
-            opacity: 1;
-            transition: opacity 0.3s ease;
-        }
-
         .medal-row-small {
             position: absolute;
             left: 93.5px;
@@ -150,11 +118,6 @@
 
         <div class="medal-area-large" id="medalAreaLarge"></div>
 
-        <div class="medal-text" id="medalText">
-            <div class="medal-title" id="medalTitle"></div>
-            <div class="medal-desc" id="medalDesc"></div>
-        </div>
-
         <div class="medal-row-small" id="medalRowSmall">
             <div class="small-medals-track" id="smallMedalsTrack"></div>
         </div>
@@ -168,14 +131,6 @@
             'assets/medal_3.png',
             'assets/medal_4.png',
             'assets/medal_5.png'
-        ];
-
-        const MEDAL_INFO = [
-            { title: 'Trading Pioneer', desc: 'Take the first step, start your investment journey.' },
-            { title: 'Market Analyst', desc: 'Sharp insight, capture every market opportunity.' },
-            { title: 'Weekly Team Champion', desc: 'Compete with teamwork, explore new heights in finance.' },
-            { title: 'Profit Master', desc: 'Steady returns, master the art of wealth growth.' },
-            { title: 'Diamond Hands', desc: 'Hold with conviction, weather every storm.' }
         ];
 
         const TOTAL = MEDALS.length;
@@ -278,8 +233,6 @@
             animating = true;
             currentIndex = index;
             updatePositions(true);
-            updateText();
-
             setTimeout(() => {
                 animating = false;
             }, 420);
@@ -293,25 +246,8 @@
             goTo(currentIndex + 1);
         }
 
-        // Medal text elements
-        const medalTitle = document.getElementById('medalTitle');
-        const medalDesc = document.getElementById('medalDesc');
-
-        function updateText() {
-            medalTitle.style.opacity = '0';
-            medalDesc.style.opacity = '0';
-            setTimeout(() => {
-                medalTitle.textContent = MEDAL_INFO[currentIndex].title;
-                medalDesc.textContent = MEDAL_INFO[currentIndex].desc;
-                medalTitle.style.opacity = '1';
-                medalDesc.style.opacity = '1';
-            }, 150);
-        }
-
         // Initialize
         updatePositions(false);
-        medalTitle.textContent = MEDAL_INFO[currentIndex].title;
-        medalDesc.textContent = MEDAL_INFO[currentIndex].desc;
 
         // Touch / mouse swipe handling
         let startX = 0;
